@@ -39,7 +39,7 @@ export function concat(parts: Uint8Array[]): Uint8Array {
 
 export function b64(bytes: Uint8Array): string {
   let s = "";
-  for (let i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
+  for (const b of bytes) s += String.fromCharCode(b);
   return btoa(s);
 }
 

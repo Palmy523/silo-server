@@ -50,7 +50,6 @@ class ErrorBoundaryInner extends Component<ErrorBoundaryProps, ErrorBoundaryStat
     console.error("[ErrorBoundary]", error, info.componentStack);
     emit("ErrorBoundaryInner.componentDidCatch", error, {
       path: "web/src/components/ErrorBoundary.tsx",
-      symbol: "ErrorBoundaryInner.componentDidCatch",
       error_class: 3,
       start: 49,
       end: 56,

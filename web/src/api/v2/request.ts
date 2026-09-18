@@ -421,7 +421,6 @@ function reportV2Fault(err: unknown): void {
     err instanceof V2ProblemError ? err.status : err instanceof V2TransportError ? err.status : 0;
   emit("v2", err, {
     path: "web/src/api/v2/request.ts",
-    symbol: "v2",
     error_class: status >= 500 ? 2 : 1,
     start: 338,
     end: 420,
