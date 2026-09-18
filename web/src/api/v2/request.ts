@@ -13,6 +13,7 @@
  * device headers) is the same machinery the v1 client uses, shared through
  * `fetchWithSession`. This module never touches `/api/v1`.
  */
+import { emit } from "@/lib/sigil/client";
 import {
   fetchWithSession,
   isProfileRequestContextCurrent,
@@ -382,19 +383,22 @@ export async function v2<K extends V2OperationKey>(
     headers["X-Profile-Token"] = snapshot.profileToken ?? "";
   }
 
-  const { res, requestProfileId, requestProfileToken } = await fetchWithSession(
-    buildUrl(route, options.path, options.query),
-    init,
-    snapshot,
-    options.retryAuthentication !== false && !authExchangeOperations.has(key),
-  );
-  if (snapshot && !isProfileRequestContextCurrent(snapshot)) {
-    throw new StaleApiRequestContextError();
-  }
-
+  let requestProfileId: string | null = null;
+  let requestProfileToken: string | null = null;
   try {
-    const decoded = await decodeV2Response(key, res);
-    options.onResponse?.(res);
+    const session = await fetchWithSession(
+      buildUrl(route, options.path, options.query),
+      init,
+      snapshot,
+      options.retryAuthentication !== false && !authExchangeOperations.has(key),
+    );
+    requestProfileId = session.requestProfileId;
+    requestProfileToken = session.requestProfileToken;
+    if (snapshot && !isProfileRequestContextCurrent(snapshot)) {
+      throw new StaleApiRequestContextError();
+    }
+    const decoded = await decodeV2Response(key, session.res);
+    options.onResponse?.(session.res);
     return decoded;
   } catch (err) {
     if (
@@ -404,8 +408,24 @@ export async function v2<K extends V2OperationKey>(
     ) {
       reportProfileUnverified(requestProfileId, requestProfileToken, snapshot);
     }
+    reportV2Fault(err);
     throw err;
   }
+}
+
+function reportV2Fault(err: unknown): void {
+  if (err instanceof StaleApiRequestContextError) return;
+  if (err instanceof Error && err.name === "AbortError") return;
+  if (err instanceof V2ProblemError && (err.status === 401 || err.status === 403)) return;
+  const status =
+    err instanceof V2ProblemError ? err.status : err instanceof V2TransportError ? err.status : 0;
+  emit("v2", err, {
+    path: "web/src/api/v2/request.ts",
+    symbol: "v2",
+    error_class: status >= 500 ? 2 : 1,
+    start: 338,
+    end: 420,
+  });
 }
 
 /**

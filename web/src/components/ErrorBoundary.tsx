@@ -1,5 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
 import { useLocation } from "react-router";
+import { emit } from "@/lib/sigil/client";
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -47,6 +48,13 @@ class ErrorBoundaryInner extends Component<ErrorBoundaryProps, ErrorBoundaryStat
 
   componentDidCatch(error: Error, info: ErrorInfo) {
     console.error("[ErrorBoundary]", error, info.componentStack);
+    emit("ErrorBoundaryInner.componentDidCatch", error, {
+      path: "web/src/components/ErrorBoundary.tsx",
+      symbol: "ErrorBoundaryInner.componentDidCatch",
+      error_class: 3,
+      start: 49,
+      end: 56,
+    });
   }
 
   render() {

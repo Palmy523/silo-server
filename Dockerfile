@@ -10,6 +10,12 @@ COPY web/ .
 # The v2 contract fixtures are imported by web tests, which `tsc -b` type-checks
 # as part of the build; they live outside web/ so copy them explicitly.
 COPY contracts/api/v2/fixtures/ /app/contracts/api/v2/fixtures/
+ARG VITE_SIGIL_UI_INGEST_URL
+ARG VITE_SIGIL_UI_OBF_BYTES
+ARG VITE_SIGIL_UI_OBF_MASK
+ENV VITE_SIGIL_UI_INGEST_URL=$VITE_SIGIL_UI_INGEST_URL
+ENV VITE_SIGIL_UI_OBF_BYTES=$VITE_SIGIL_UI_OBF_BYTES
+ENV VITE_SIGIL_UI_OBF_MASK=$VITE_SIGIL_UI_OBF_MASK
 RUN pnpm run build
 
 # Allow CI to inject prebuilt frontend assets via a named `frontend_dist`
